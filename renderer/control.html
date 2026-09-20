@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+  <title>轴提示器</title>
+  <link rel="stylesheet" href="./control.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Nai Overlay</p>
+        <h1>轴提示器</h1>
+        <p class="sub">开始、暂停、重置和轴参数仅主持可改。队员加入后按同一房间密码同步。</p>
+      </div>
+      <div class="hero-status" id="heroStatus">
+        <span class="pill" id="modePill">单机</span>
+        <span class="pill ghost" id="runPill">未开始</span>
+      </div>
+    </header>
+
+    <section class="live">
+      <div class="live-main">
+        <div class="kicker" id="liveKicker">等待开轴</div>
+        <div class="live-name" id="liveName">—</div>
+        <div class="live-meta">
+          <span id="liveUntil">间隔 5.00s</span>
+          <span id="liveRemain">提示 4.00s</span>
+          <span id="liveMeEta">距你 —</span>
+        </div>
+      </div>
+      <div class="live-actions">
+        <button class="btn primary" id="btnStart">开始</button>
+        <button class="btn" id="btnPause">暂停</button>
+        <button class="btn danger" id="btnStop">重置</button>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h2>轴参数</h2>
+        <div class="fields">
+          <label>
+            <span>A · 技能 CD（秒）</span>
+            <input type="number" id="cd" min="1" max="3600" step="1" />
+          </label>
+          <label>
+            <span>B · 持续时间（秒）</span>
+            <input type="number" id="duration" min="0.2" max="120" step="0.1" />
+          </label>
+          <label class="field-team">
+            <span>C · 轴内人数</span>
+            <input type="number" id="teamSize" min="1" max="40" step="1" readonly />
+          </label>
+        </div>
+        <p class="hint" id="intervalHint">每人间隔 = CD / 人数 = 5.00s</p>
+        <p class="hint">CD、持续时间和开轴控制仅主持可改。轴内人数 = 已进房的人 + 主持手动新增的占位（手机玩家也可占一座）。</p>
+        <p class="warn hidden" id="durationWarn">持续时间已大于间隔，提示会连续覆盖。</p>
+        <label class="range">
+          <span>本机悬浮层透明度</span>
+          <input type="range" id="opacity" min="0.2" max="1" step="0.01" />
+        </label>
+        <label class="range">
+          <span>本机悬浮层大小</span>
+          <input type="range" id="overlayScale" min="0.7" max="1.8" step="0.05" />
+        </label>
+        <p class="hint">位置、大小、透明度只保存在自己电脑上，不会同步给其他人。</p>
+        <div class="btn-row">
+          <button class="btn" id="btnResetOverlay">重置悬浮层位置</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>实时通讯</h2>
+        <p class="hint">输入主持密钥后才会出现开始主持。主持成功后把六位房间密码发给队员。</p>
+        <label>
+          <span>我的名字</span>
+          <input type="text" id="myName" maxlength="12" placeholder="加入时带给主持端" />
+        </label>
+        <label id="hostKeyWrap">
+          <span>主持密钥</span>
+          <input type="password" id="hostKey" placeholder="主持专用，输入正确后显示开房按钮" />
+        </label>
+        <div class="btn-row">
+          <button class="btn primary hidden" id="btnHost">开始主持</button>
+          <button class="btn" id="btnLeave">断开</button>
+        </div>
+        <label>
+          <span>加入地址</span>
+          <input type="text" id="joinUrl" value="wss://8.130.118.63:9527" placeholder="wss://8.130.118.63:9527" />
+        </label>
+        <label>
+          <span>房间密码</span>
+          <input type="text" id="joinRoomCode" maxlength="6" inputmode="numeric" placeholder="六位数字" />
+        </label>
+        <div class="btn-row">
+          <button class="btn" id="btnJoin">加入房间</button>
+        </div>
+        <p class="room-code hidden" id="roomCodeBoard">房间密码 <strong id="roomCodeView">------</strong></p>
+        <p class="mono" id="hostUrl">未主持</p>
+        <p class="error" id="errorText"></p>
+        <div class="clients" id="clients"></div>
+      </section>
+    </div>
+
+    <section class="card" id="seatsCard">
+      <div class="card-head">
+        <h2>轴内座位 <span class="seat-busy-flag hidden" id="seatBusyFlag"><i class="spinner"></i></span></h2>
+        <p class="hint">已进房的人会自动入座。主持可新增未进房的占位（例如手机玩家），计入轮转但不占用 Electron。</p>
+      </div>
+      <div class="add-seat" id="addSeatRow">
+        <input type="text" id="newSeatName" maxlength="12" placeholder="未进房玩家的名字" />
+        <button type="button" class="btn" id="btnAddSeat">新增轴内人员</button>
+      </div>
+      <div class="seats-wrap">
+        <div class="seats" id="seats"></div>
+        <div class="seats-loading hidden" id="seatLoading">
+          <span class="spinner"></span>
+          <span class="seat-loading-text">座位同步中…</span>
+        </div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-head">
+        <h2>观众席</h2>
+        <p class="hint">观众能看轴，但不计入技能轮转。右键可移回轴内或踢出。</p>
+      </div>
+      <div class="spectators" id="spectators"></div>
+    </section>
+    <div id="seatMenu" class="seat-menu hidden">
+      <button type="button" data-act="forward">前移一位</button>
+      <button type="button" data-act="back">后移一位</button>
+      <button type="button" data-act="spectate">移到观众席</button>
+      <button type="button" data-act="unspectate">移回轴内</button>
+      <button type="button" data-act="kick" class="danger">踢出 / 移出</button>
+    </div>
+
+    <footer>
+      <div>
+        <label class="check">
+          <input type="checkbox" id="alwaysOnTop" />
+          始终置顶
+        </label>
+        <label class="check">
+          <input type="checkbox" id="overlayLocked" />
+          鼠标穿透（解锁：Ctrl+Shift+L，或取消勾选）
+        </label>
+      </div>
+      <p>快捷键：Ctrl+Shift+R 打开房间面板 · Ctrl+Shift+S 开始/暂停 · Ctrl+Shift+L 穿透 · Ctrl+Shift+H 显示/隐藏悬浮层</p>
+      <p>关掉房间窗口后，点任务栏右下角托盘图标，或悬浮层上的「房」，或 Ctrl+Shift+R 可再打开。覆盖游戏请使用无边框窗口模式。</p>
+    </footer>
+  </div>
+  <script src="./control.js"></script>
+</body>
+</html>

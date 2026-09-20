@@ -1,0 +1,9 @@
+certs/*.pem
+certs/*.key
+certs/*.crt
+node_modules/
+dist/
+out/
+*.log
+.DS_Store
+Thumbs.db

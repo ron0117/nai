@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+  <title>轴悬浮层</title>
+  <link rel="stylesheet" href="./overlay.css" />
+</head>
+<body>
+  <div class="shell" id="shell">
+    <div class="shell-bg" id="shellBg"></div>
+    <div class="drag">
+      <span id="statusDot"></span>
+      <strong>轴提示器</strong>
+      <div class="hud-controls">
+        <button type="button" id="scaleDown" title="缩小">A−</button>
+        <button type="button" id="scaleUp" title="放大">A+</button>
+        <input type="range" id="overlayOpacity" min="0.2" max="1" step="0.02" title="透明度" />
+        <button type="button" id="btnRoom" title="打开房间面板">房</button>
+        <button type="button" id="btnLock" title="锁定后用 Ctrl+Shift+L 解锁">锁</button>
+      </div>
+      <em id="lockText" title="可拖动调整">可拖动</em>
+    </div>
+    <div class="body">
+      <div class="ring-wrap">
+        <svg id="ring" viewBox="0 0 100 100"></svg>
+        <div class="count" id="count">--</div>
+      </div>
+      <div class="copy">
+        <div class="label" id="label">等待开轴</div>
+        <div class="name" id="name">—</div>
+        <div class="next" id="next">下一位 —</div>
+        <div class="me-eta" id="meEta">距你点技能 —</div>
+        <div class="bar"><i id="bar"></i></div>
+      </div>
+    </div>
+    <div class="grip" id="grip" title="拖动调整窗口大小"></div>
+  </div>
+  <script src="./overlay.js"></script>
+</body>
+</html>

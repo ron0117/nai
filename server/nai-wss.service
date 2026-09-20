@@ -1,0 +1,17 @@
+[Unit]
+Description=Nai axis WSS server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/nai
+ExecStart=/usr/bin/env node /opt/nai/server/index.js
+Restart=always
+RestartSec=3
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=WSS_HOST=0.0.0.0
+Environment=WSS_PORT=9527
+Environment=HOST_KEY=NAI2026
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,202 @@
+html, body {
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+  font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+}
+
+.shell {
+  position: relative;
+  margin: 8px;
+  padding: 10px 12px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(90, 220, 255, 0.45);
+  color: #f4f8ff;
+  background: transparent;
+}
+
+.shell-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: #080c14;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shell.mine {
+  border-color: #ff5a78;
+}
+
+.drag,
+.body,
+.grip {
+  position: relative;
+  z-index: 1;
+}
+
+.drag {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #d7e2f0;
+  text-shadow: 0 1px 2px #000, 0 0 6px #000;
+  -webkit-app-region: drag;
+}
+
+.drag strong {
+  flex-shrink: 0;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
+}
+
+.drag em {
+  font-style: normal;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.hud-controls,
+.hud-controls * {
+  -webkit-app-region: no-drag;
+}
+
+.hud-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-left: auto;
+  min-width: 0;
+}
+
+.hud-controls button {
+  border: 0;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f4f8ff;
+  border-radius: 6px;
+  width: 28px;
+  height: 22px;
+  font-size: 11px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.hud-controls button:hover {
+  background: rgba(94, 224, 255, 0.28);
+}
+
+.hud-controls input[type="range"] {
+  width: 72px;
+  min-width: 48px;
+  height: 18px;
+  margin: 0 6px;
+  accent-color: #5ee0ff;
+  flex: 1 1 48px;
+}
+
+#statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #5ee0ff;
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 12px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+.ring-wrap {
+  position: relative;
+  width: 88px;
+  height: 88px;
+}
+
+.ring-wrap svg {
+  width: 88px;
+  height: 88px;
+}
+
+.count {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px #000, 0 0 6px #000;
+}
+
+.label {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #d5deea;
+  text-shadow: 0 1px 2px #000, 0 0 6px #000;
+}
+
+.name {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #ffffff;
+  text-shadow: 0 1px 2px #000, 0 0 8px #000;
+}
+
+.next {
+  margin-top: 4px;
+  color: #e2eaf4;
+  font-size: 13px;
+  text-shadow: 0 1px 2px #000, 0 0 6px #000;
+}
+
+.me-eta {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #e0c56a;
+  text-shadow: 0 1px 2px #000, 0 0 8px #000;
+}
+
+.shell.mine .me-eta {
+  color: #ff8aa0;
+}
+
+.bar {
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 99px;
+  background: #3a4452;
+  overflow: hidden;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #5ee0ff;
+  transition: background 80ms linear, box-shadow 80ms linear;
+}
+
+.grip {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 12px;
+  height: 12px;
+  cursor: nwse-resize;
+  -webkit-app-region: no-drag;
+  background:
+    linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.55) 50%) 100% 100% / 4px 4px no-repeat,
+    linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.4) 50%) 100% 100% / 8px 8px no-repeat,
+    linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.25) 50%) 100% 100% / 12px 12px no-repeat;
+}
+
+.shell.mine #statusDot { background: #ff6b88; }

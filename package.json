@@ -1,0 +1,61 @@
+{
+  "name": "nai-axis-overlay",
+  "version": "1.0.0",
+  "description": "游戏置顶轴提示器：半透明悬浮提醒轮转技能",
+  "main": "electron/main.js",
+  "author": "nai",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "server": "node server/index.js",
+    "server:prod": "node server/index.js",
+    "pack": "electron-builder --win portable",
+    "dist": "electron-builder --win"
+  },
+  "dependencies": {
+    "selfsigned": "^2.4.1",
+    "ws": "^8.18.1"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.nai.axis",
+    "productName": "Nai轴提示器",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "renderer/**/*",
+      "server/auth.js",
+      "server/room.js"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "NaiAxis-portable-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": true,
+      "artifactName": "NaiAxis-Setup-${version}.exe"
+    }
+  }
+}
