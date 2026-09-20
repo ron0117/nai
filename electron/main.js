@@ -1185,21 +1185,30 @@ function registerShortcuts() {
 
 app.commandLine.appendSwitch('enable-transparent-visuals')
 app.commandLine.appendSwitch('ignore-certificate-errors')
+app.setAppUserModelId('com.nai.axis')
 
-app.whenReady().then(() => {
-  state = createState(loadSettings())
-  createControlWindow()
-  createOverlayWindow()
-  createTray()
-  registerShortcuts()
-  ticker = setInterval(() => {
-    if (state.running && !state.paused) broadcast()
-  }, 50)
-  app.on('activate', () => {
-    if (!controlWin) createControlWindow()
-    if (!overlayWin) createOverlayWindow()
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    showControlWindow()
   })
-})
+
+  app.whenReady().then(() => {
+    state = createState(loadSettings())
+    createControlWindow()
+    createOverlayWindow()
+    createTray()
+    registerShortcuts()
+    ticker = setInterval(() => {
+      if (state.running && !state.paused) broadcast()
+    }, 50)
+    app.on('activate', () => {
+      if (!controlWin) createControlWindow()
+      if (!overlayWin) createOverlayWindow()
+    })
+  })
+}
 
 app.on('before-quit', () => {
   isQuitting = true
