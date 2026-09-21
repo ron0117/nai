@@ -1,5 +1,5 @@
 /**
- * 轴提示器 WSS 服务
+ * 无忧辅助工具 WSS 服务
  *
  * 启动：npm run server
  * 环境变量：
@@ -8,7 +8,7 @@
  *   WSS_CERT   证书路径，缺省则自动生成自签证书
  *   WSS_KEY    私钥路径
  *
- *   HOST_KEY   主持密钥，默认 NAI2026
+ *   HOST_KEY   主持密钥，默认 zanmei13
  *
  * 客户端协议：
  *   主持 { type: "host", hostKey, name, slot, config, members }
@@ -225,7 +225,7 @@ const httpServer = https.createServer(tls, (req, res) => {
     return
   }
   res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' })
-  res.end('Nai 轴提示器 WSS 服务')
+  res.end('无忧辅助工具 WSS 服务')
 })
 
 const wss = new WebSocketServer({ server: httpServer })
@@ -291,7 +291,7 @@ httpServer.on('error', (err) => {
 })
 
 httpServer.listen(PORT, HOST, () => {
-  console.log(`WSS 已监听 wss://${HOST}:${PORT}`)
+  console.log(`WSS 已监听端口 ${PORT}`)
   console.log('队员加入时需填写六位房间密码')
   console.log(`证书：${CERT_PATH}`)
 })

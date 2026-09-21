@@ -3,6 +3,8 @@ certs/*.key
 certs/*.crt
 node_modules/
 dist/
+dist.zip
+*.zip
 out/
 *.log
 .DS_Store

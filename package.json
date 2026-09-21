@@ -1,7 +1,7 @@
 {
   "name": "nai-axis-overlay",
   "version": "1.0.0",
-  "description": "游戏置顶轴提示器：半透明悬浮提醒轮转技能",
+  "description": "游戏置顶无忧辅助工具：半透明悬浮提醒轮转技能",
   "main": "electron/main.js",
   "author": "nai",
   "license": "MIT",
@@ -23,7 +23,7 @@
   },
   "build": {
     "appId": "com.nai.axis",
-    "productName": "Nai轴提示器",
+    "productName": "无忧辅助工具",
     "directories": {
       "output": "dist"
     },

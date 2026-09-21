@@ -260,10 +260,6 @@ function render(state) {
   if (document.activeElement !== $('joinRoomCode')) {
     setVal('joinRoomCode', state.mode === 'host' ? state.roomCode || '' : state.joinRoomCode || '')
   }
-  if (document.activeElement !== $('joinUrl')) {
-    const joinValue = state.lastJoinUrl || state.hostUrl || $('joinUrl').value || 'wss://8.130.118.63:9527'
-    if ($('joinUrl').value !== joinValue) $('joinUrl').value = joinValue
-  }
 
   const hosting = isHosting(state)
   $('cd').disabled = !hosting
@@ -320,14 +316,10 @@ function render(state) {
   $('roomCodeBoard').classList.toggle('hidden', !(state.mode === 'host' && state.roomCode))
   $('roomCodeView').textContent = state.roomCode || '------'
   $('hostUrl').textContent = state.mode === 'host'
-    ? /^wss?:\/\//i.test(state.hostUrl || '')
-      ? `主持已连接 ${state.hostUrl}，队员用同一地址加入`
-      : `队员可加入：${[...new Set(['127.0.0.1', ...state.lanIPs])]
-          .map((ip) => `ws://${ip}:${state.port}`)
-          .join('  |  ')}`
+    ? '主持中，把房间密码发给队员即可加入'
     : state.mode === 'client'
-      ? `已连接 ${state.hostUrl || state.lastJoinUrl}`
-      : '未主持'
+      ? '已加入房间'
+      : '未连接'
   $('errorText').textContent = state.error || ''
 
   $('clients').innerHTML = (state.clients || [])
@@ -397,11 +389,11 @@ $('btnStart').addEventListener('click', () => send('start'))
 $('btnPause').addEventListener('click', () => send('pause'))
 $('btnStop').addEventListener('click', () => send('stop'))
 $('btnHost').addEventListener('click', () => {
-  send('setMyName', $('myName').value).then(() => send('host', $('joinUrl').value))
+  send('setMyName', $('myName').value).then(() => send('host'))
 })
 $('btnJoin').addEventListener('click', () => {
   send('setMyName', $('myName').value).then(() =>
-    send('join', { url: $('joinUrl').value, roomCode: $('joinRoomCode').value }),
+    send('join', { roomCode: $('joinRoomCode').value }),
   )
 })
 $('hostKey').addEventListener('input', () => send('setHostKey', $('hostKey').value))

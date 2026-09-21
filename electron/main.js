@@ -11,10 +11,9 @@ const {
 } = require('electron')
 const path = require('path')
 const fs = require('fs')
-const os = require('os')
-const { WebSocketServer, WebSocket } = require('ws')
+const { WebSocket } = require('ws')
 const { remapSlot, moveArrayItem } = require('../server/room')
-const { HOST_KEY } = require('../server/auth')
+const { HOST_KEY, DEFAULT_WSS_URL } = require('../server/auth')
 
 const DEFAULT_MEMBERS = (size) =>
   Array.from({ length: size }, (_, i) => `${i + 1}号`)
@@ -27,7 +26,7 @@ const DEFAULT_SETTINGS = {
   myIndex: 0,
   members: DEFAULT_MEMBERS(24),
   port: 9527,
-  lastJoinUrl: 'wss://8.130.118.63:9527',
+  lastJoinUrl: DEFAULT_WSS_URL,
   alwaysOnTop: true,
   myName: '',
   overlayScale: 1,
@@ -63,7 +62,7 @@ function saveSettings() {
     myIndex: state.myIndex,
     members: state.members,
     port: state.port,
-    lastJoinUrl: state.lastJoinUrl,
+    lastJoinUrl: DEFAULT_WSS_URL,
     alwaysOnTop: state.alwaysOnTop,
     myName: state.myName,
     overlayScale: state.overlayScale,
@@ -76,17 +75,6 @@ function saveSettings() {
   } catch (err) {
     console.error('保存设置失败', err)
   }
-}
-
-function lanAddresses() {
-  const nets = os.networkInterfaces()
-  const result = []
-  for (const list of Object.values(nets)) {
-    for (const net of list || []) {
-      if (net.family === 'IPv4' && !net.internal) result.push(net.address)
-    }
-  }
-  return result
 }
 
 function normalizeMembers(members, teamSize) {
@@ -107,7 +95,7 @@ function createState(settings) {
     members: normalizeMembers(settings.members, teamSize),
     myIndex: clamp(Number(settings.myIndex) || 0, 0, teamSize - 1),
     port: clamp(Number(settings.port) || 9527, 1024, 65535),
-    lastJoinUrl: settings.lastJoinUrl || 'wss://8.130.118.63:9527',
+    lastJoinUrl: DEFAULT_WSS_URL,
     alwaysOnTop: settings.alwaysOnTop !== false,
     myName: String(settings.myName || '').trim().slice(0, 12),
     overlayScale: clamp(Number(settings.overlayScale) || 1, 0.7, 1.8),
@@ -123,7 +111,7 @@ function createState(settings) {
     overlayLocked: false,
     overlayVisible: true,
     hostUrl: '',
-    lanIPs: lanAddresses(),
+    lanIPs: [],
     connected: false,
     clients: [],
     error: '',
@@ -202,16 +190,15 @@ function computeRuntime(now = Date.now()) {
   }
 }
 
-function randomRoomCode() {
-  return String(Math.floor(100000 + Math.random() * 900000))
-}
-
 function snapshot() {
   const runtime = computeRuntime()
   const displayedMembers = state.members.slice(0, state.config.teamSize)
   const untilMe = untilMyTurnMs(runtime)
   const data = {
     ...state,
+    lanIPs: [],
+    lastJoinUrl: '',
+    hostUrl: '',
     members: displayedMembers,
     canHost: state.enteredHostKey === HOST_KEY,
     runtime: {
@@ -268,7 +255,7 @@ function publicState(data) {
     currentName: data.currentName,
     nextName: data.nextName,
     clients: data.clients,
-    hostUrl: data.hostUrl,
+    hostUrl: '',
     room: data.roomCode,
     serverNow: Date.now(),
   }
@@ -541,18 +528,18 @@ function describeWsError(err) {
   const code = err?.code || ''
   const message = String(err?.message || '')
   if (code === 'ETIMEDOUT' || /timed? ?out/i.test(message)) {
-    return '连不上服务器 9527 端口。请确认 nai-wss 已启动，且阿里云安全组已放行 TCP 9527'
+    return '连接超时，请稍后重试'
   }
   if (code === 'ECONNREFUSED') {
-    return '服务器拒绝连接。请在服务器执行 systemctl status nai-wss 确认服务在跑'
+    return '服务器拒绝连接，请稍后重试'
   }
   if (code === 'ENOTFOUND') {
-    return '找不到服务器地址，请检查加入地址是否写对'
+    return '无法连接服务器'
   }
   if (/certificate|SSL|TLS|self[- ]signed/i.test(message)) {
-    return `证书校验失败：${message}`
+    return '证书校验失败'
   }
-  return message || '未知网络错误'
+  return '网络异常，请稍后重试'
 }
 
 function sendToServer(message) {
@@ -600,16 +587,11 @@ function handleServerMessage(msg) {
   }
 }
 
-function connectRemote(url, role) {
+function connectRemote(_url, role) {
   closeServer()
   closeClient()
   state.error = ''
-  const target = String(url || '').trim()
-  if (!target) {
-    state.error = '请输入 WebSocket 地址'
-    broadcast()
-    return
-  }
+  const target = DEFAULT_WSS_URL
   state.lastJoinUrl = target
   schedulePersist()
   wsClient = new WebSocket(target, {
@@ -618,7 +600,7 @@ function connectRemote(url, role) {
   })
   wsClient.on('open', () => {
     state.connected = true
-    state.hostUrl = target
+    state.hostUrl = ''
     if (role === 'host') {
       state.mode = 'host'
       state.spectator = false
@@ -677,57 +659,17 @@ function joinHost(payload) {
   if (payload && typeof payload === 'object') {
     state.joinRoomCode = String(payload.roomCode || '').replace(/\D/g, '').slice(0, 6)
     schedulePersist()
-    connectRemote(payload.url, 'client')
-    return
   }
-  connectRemote(payload, 'client')
+  connectRemote(DEFAULT_WSS_URL, 'client')
 }
 
-function startHost(url) {
+function startHost() {
   if (state.enteredHostKey !== HOST_KEY) {
     state.error = '房间不存在'
     broadcast()
     return
   }
-  const target = String(url || state.lastJoinUrl || '').trim()
-  if (/^wss?:\/\//i.test(target)) {
-    connectRemote(target, 'host')
-    return
-  }
-  closeClient()
-  closeServer()
-  state.error = ''
-  state.roomCode = randomRoomCode()
-  wss = new WebSocketServer({ host: '0.0.0.0', port: state.port })
-  wss.on('connection', (socket) => {
-    socket.meta = {
-      id: Math.random().toString(36).slice(2, 8),
-      name: '队员',
-      slot: null,
-      spectator: false,
-    }
-    socket.on('message', (message) => handleHostClientMessage(socket, message))
-    socket.on('close', () => {
-      rebuildLocalAxis()
-      broadcast()
-    })
-  })
-  wss.on('listening', () => {
-    state.mode = 'host'
-    state.connected = true
-    state.spectator = false
-    state.lanIPs = lanAddresses()
-    state.hostUrl = `ws://${state.lanIPs[0] || '127.0.0.1'}:${state.port}`
-    rebuildLocalAxis()
-    broadcast()
-  })
-  wss.on('error', (err) => {
-    state.error = `主持失败：${err.message}`
-    state.mode = 'local'
-    state.connected = false
-    closeServer()
-    broadcast()
-  })
+  connectRemote(DEFAULT_WSS_URL, 'host')
 }
 
 function leaveNetwork(message) {
@@ -1037,7 +979,7 @@ function createTray() {
     ? nativeImage.createFromPath(iconPath)
     : nativeImage.createEmpty()
   tray = new Tray(icon.isEmpty() ? nativeImage.createFromPath(process.execPath) : icon)
-  tray.setToolTip('Nai轴提示器')
+  tray.setToolTip('无忧辅助工具')
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: '打开房间面板', click: () => showControlWindow() },

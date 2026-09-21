@@ -11,7 +11,7 @@ RestartSec=3
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
 Environment=WSS_HOST=0.0.0.0
 Environment=WSS_PORT=9527
-Environment=HOST_KEY=NAI2026
+Environment=HOST_KEY=zanmei13
 
 [Install]
 WantedBy=multi-user.target
